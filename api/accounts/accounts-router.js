@@ -3,7 +3,6 @@ const md = require('./accounts-middleware')
 const Account = require('./accounts-model')
 
 router.get('/', async (req, res, next) => {
-  // DO YOUR MAGIC
 try {
   const accounts = await Account.getAll()
   res.json(accounts)
@@ -13,7 +12,12 @@ try {
 })
 
 router.get('/:id', md.checkAccountId, async (req, res, next) => {
-  res.json(req.account)
+  try { 
+    const account = await Account.getById(req.params.id)
+    res.json(account)
+  } catch (err) {
+    next({ status: 404, message: 'id does not exist' })
+  }
 })
 
 router.post('/', 
@@ -22,7 +26,10 @@ router.post('/',
   async (req, res, next) => {
   // DO YOUR MAGIC
 try {
-  const newAccount = await Account.create(req.body)
+  const newAccount = await Account.create({
+    name: req.body.name.trim(),
+    budget: req.body.budget
+  })
   res.status(201).json(newAccount)
 } catch (err) {
   next(err)
@@ -32,11 +39,11 @@ try {
 router.put('/:id', 
 md.checkAccountId,
 md.checkAccountPayload,
-md.checkAccountNameUnique, 
-(req, res, next) => {
+async (req, res, next) => {
   // DO YOUR MAGIC
 try {
-
+  const updated = await Account.updateById(req.params.id, req.body)
+  res.json(updated)
 } catch(err)  {
   next(err)
 }
